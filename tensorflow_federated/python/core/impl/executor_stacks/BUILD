@@ -22,8 +22,8 @@ py_library(
 py_library(
     name = "executor_stack_bindings",
     srcs = ["executor_stack_bindings.py"],
+    data = ["//tensorflow_federated/cc/core/impl/executor_stacks:executor_stack_bindings.so"],
     srcs_version = "PY3",
-    tags = ["nokokoro"],
     deps = [
         "//tensorflow_federated/python/core/impl/executors:data_conversions",
         "//tensorflow_federated/python/core/impl/executors:executor_bindings",
@@ -37,10 +37,11 @@ py_test(
     data = ["@pybind11_abseil//pybind11_abseil:status.so"],
     python_version = "PY3",
     srcs_version = "PY3",
-    tags = ["nokokoro"],
     deps = [
         ":executor_stack_bindings",
         "//tensorflow_federated/python/core/impl/executors:executor_bindings",
         "//tensorflow_federated/python/core/impl/types:placements",
+        "@absl_py//absl/testing:absltest",
+        "@absl_py//absl/testing:parameterized",
     ],
 )

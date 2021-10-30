@@ -22,8 +22,11 @@ build --spawn_strategy=local
 # Enable build optimizations.
 build --compilation_mode=opt
 
+# TODO(b/99999): re-enable fast_cpp_protos after figuring out how
+# to use them in conjuction with pybind11_protobuf and TensorFlow's
+# Python extensions.
 # Enable fast C++ protocol buffers, 10x speedup over pure Python.
-build --define=use_fast_cpp_protos=true
+# build --define=use_fast_cpp_protos=true
 build --define=allow_oversize_protos=true
 
 # Processor native optimizations (depends on build host capabilities).
@@ -68,6 +71,7 @@ build:remote --project_id=tensorflow-federated
 # Required to build TensorFlow.
 #
 build --define framework_shared_object=true
+build --copt=-DSHARED_TF_FRAMEWORK_OBJECT
 # Modular TF build options
 build:dynamic_kernels --define=dynamic_loaded_kernels=true
 build:dynamic_kernels --copt=-DAUTOLOAD_DYNAMIC_KERNELS
@@ -92,6 +96,12 @@ build:avx_linux --host_copt=-mavx
 build:native_arch_linux --copt=-march=native
 build:v1 --define=tf_api_version=1 --action_env=TF2_BEHAVIOR=0
 build:v2 --define=tf_api_version=2 --action_env=TF2_BEHAVIOR=1
+
+# pybind_abeil does not include a __init__.py, which breaks dependencies when
+# bazel produces an empty __init__.py and hides the symbols form the `.so`
+# python extension. We must ask bazel not to generate these and rely on
+# explicit __init__.py files.
+build --incompatible_default_to_explicit_init_py
 
 # See https://github.com/bazelbuild/bazel/issues/7362 for information on what
 # --incompatible_remove_legacy_whole_archive flag does.
