@@ -280,6 +280,36 @@ class FederatedComputationTest(parameterized.TestCase):
     result = bar([collections.OrderedDict(x=1, y=2)])
     self.assertEqual(result, [1])
 
+  @test_contexts.with_contexts
+  def test_runs_federated_select(self):
+    keys_per_client = 3
+    max_key = 5
+    selectee_type = tff.TensorType(tf.string, [None])
+
+    @tff.tf_computation(selectee_type, tf.int32)
+    @tff.check_returns_type(tf.string)
+    def gather(selectee, key):
+      return tf.gather(selectee, key)
+
+    @tff.federated_computation(
+        tff.type_at_server(selectee_type),
+        tff.type_at_clients(tff.TensorType(tf.int32, [keys_per_client])))
+    @tff.check_returns_type(tff.type_at_clients(tff.SequenceType(tf.string)))
+    def select(server_val, client_keys):
+      max_key_at_server = tff.federated_value(max_key, tff.SERVER)
+      return tff.federated_select(client_keys, max_key_at_server, server_val,
+                                  gather)
+
+    result = select(['zero', 'one', 'two', 'three', 'four'],
+                    [[0, 1, 2], [1, 2, 3], [2, 3, 4]])
+    self.assertIsInstance(result, list)
+    list_result = [list(ds.as_numpy_iterator()) for ds in result]
+    self.assertEqual(list_result, [
+        [b'zero', b'one', b'two'],
+        [b'one', b'two', b'three'],
+        [b'two', b'three', b'four'],
+    ])
+
 
 class TensorFlowComputationTest(tf.test.TestCase, parameterized.TestCase):
 
