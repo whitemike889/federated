@@ -367,6 +367,7 @@ py_library(
         ":federating_executor",
         ":reference_resolving_executor",
         ":remote_executor",
+        ":remote_executor_grpc_stub",
         ":sequence_executor",
         ":sizing_executor",
         ":thread_delegating_executor",
@@ -740,8 +741,8 @@ py_library(
         ":executor_serialization",
         ":executor_value_base",
         ":executors_errors",
+        ":remote_executor_stub",
         "//tensorflow_federated/proto/v0:executor_py_pb2",
-        "//tensorflow_federated/proto/v0:executor_py_pb2_grpc",
         "//tensorflow_federated/python/common_libs:py_typecheck",
         "//tensorflow_federated/python/common_libs:structure",
         "//tensorflow_federated/python/common_libs:tracing",
@@ -761,9 +762,10 @@ py_test(
         ":executor_service",
         ":executor_stacks",
         ":executor_test_utils",
-        ":executors_errors",
         ":reference_resolving_executor",
         ":remote_executor",
+        ":remote_executor_grpc_stub",
+        ":remote_executor_stub",
         "//tensorflow_federated/proto/v0:executor_py_pb2",
         "//tensorflow_federated/proto/v0:executor_py_pb2_grpc",
         "//tensorflow_federated/python/core/api:computations",
@@ -960,5 +962,45 @@ py_test(
         "//tensorflow_federated/python/core/impl/types:type_serialization",
         "@absl_py//absl/testing:parameterized",
         "@org_tensorflow//tensorflow:tensorflow_py",
+    ],
+)
+
+py_library(
+    name = "remote_executor_stub",
+    srcs = ["remote_executor_stub.py"],
+    srcs_version = "PY3",
+    deps = ["//tensorflow_federated/proto/v0:executor_py_pb2"],
+)
+
+py_library(
+    name = "remote_executor_grpc_stub",
+    srcs = ["remote_executor_grpc_stub.py"],
+    srcs_version = "PY3",
+    deps = [
+        ":executors_errors",
+        ":remote_executor_stub",
+        "//net/grpc/python:grpc",
+        "//tensorflow_federated/proto/v0:executor_py_pb2",
+        "//tensorflow_federated/proto/v0:executor_py_pb2_grpc",
+        "//tensorflow_federated/python/common_libs:tracing",
+        "@absl_py//absl/logging",
+    ],
+)
+
+py_test(
+    name = "remote_executor_grpc_stub_test",
+    srcs = ["remote_executor_grpc_stub_test.py"],
+    srcs_version = "PY3",
+    deps = [
+        ":executor_serialization",
+        ":executors_errors",
+        ":remote_executor_grpc_stub",
+        "//google/protobuf:any_py_pb2",
+        "//net/grpc/python:grpc",
+        "//tensorflow_federated/proto/v0:executor_py_pb2",
+        "//tensorflow_federated/proto/v0:executor_py_pb2_grpc",
+        "//third_party/py/portpicker",
+        "//third_party/py/tensorflow:tensorflow_no_contrib",
+        "@absl_py//absl/testing:absltest",
     ],
 )
